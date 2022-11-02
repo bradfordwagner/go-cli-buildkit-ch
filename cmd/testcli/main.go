@@ -26,7 +26,7 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "ks",
+	Use: "testcli",
 }
 
 var localCmd = &cobra.Command{

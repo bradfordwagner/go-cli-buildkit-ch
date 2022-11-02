@@ -1,6 +1,6 @@
 builds:
-  - main: ./cmd/ks
-    id: ks
+  - main: ./cmd/testcli
+    id: testcli
     env:
       - CGO_ENABLED=0
     goos:
