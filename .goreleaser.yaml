@@ -1,5 +1,4 @@
-version: 1
-
+---
 before:
   hooks:
     - go test ./...
@@ -28,7 +27,6 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
     format_overrides:
       - goos: windows
         format: zip
