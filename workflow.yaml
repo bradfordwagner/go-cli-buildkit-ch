@@ -20,7 +20,7 @@ spec:
       - name: upstream_repo
         value: quay.io/bradfordwagner/go-builder
       - name: upstream_tag
-        value: 2.5.0
+        value: 2.6.0
     dag:
       tasks:
       - name: go-builder
