@@ -1,26 +1,38 @@
+---
+before:
+  hooks:
+    - go test ./...
+
 builds:
-  - main: ./cmd/testcli
-    id: testcli
-    env:
-      - CGO_ENABLED=0
+  - id: cli
+    main: ./cmd/testcli
+    binary: testcli
     goos:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+  - id: cli-archive
+    builds:
+      - cli
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Tag }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
 checksum:
-  name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  name_template: checksums.txt
+  algorithm: sha256
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"
