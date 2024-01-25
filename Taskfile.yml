@@ -7,4 +7,5 @@ tasks:
     cmds:
       - clear
       - goreleaser build --snapshot --clean
+      - tree dist
     silent: true
