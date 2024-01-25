@@ -5,18 +5,22 @@ before:
     - go test ./...
 
 builds:
-  - goos:
+  - id: cli
+    main: ./cmd/testcli
+    binary: testcli
+    goos:
       - linux
       - windows
       - darwin
     goarch:
       - amd64
       - arm64
-    main: ./cmd/testcli
 
 archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of `uname`.
+  - id: cli-archive
+    builds:
+      - cli
+    format: tar.gz
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -28,6 +32,9 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
 changelog:
   sort: asc
   filters:
