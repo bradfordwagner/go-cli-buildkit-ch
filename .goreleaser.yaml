@@ -14,7 +14,6 @@ builds:
     goarch:
       - amd64
       - arm64
-
 archives:
   - id: cli-archive
     builds:
