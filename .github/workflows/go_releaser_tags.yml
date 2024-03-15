@@ -6,8 +6,6 @@ on:
 jobs:
   go-releaser-tags:
     runs-on: ubuntu-latest
-    # container:
-    #   image: quay.io/bradfordwagner/go-builder:2.6.0-debian_bullseye
     steps:
       - uses: actions/checkout@v4
       - name: Setup go-task
@@ -30,7 +28,7 @@ jobs:
         with:
           version: 1.24.0
           install-only: true
-      - name: Goreleaser
+      - name: Goreleaser - tags
         run: task -t ./taskfiles/tasks/go_releaser.yml is_tag=true
         env:
           GITHUB_TOKEN: ${{ github.token }} 
