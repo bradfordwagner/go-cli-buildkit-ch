@@ -27,7 +27,7 @@ jobs:
         with:
           version: 1.24.0
           install-only: true
-      - name: Goreleaser - branches
+      - name: task=branches
         run: task -t ./taskfiles/tasks/go_releaser.yml is_tag=false
         env:
           GITHUB_TOKEN: ${{ github.token }} 
