@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"template_cli/internal/log"
 
+	"github.com/bradfordwagner/go-util/log"
 	"github.com/spf13/cobra"
 )
 
