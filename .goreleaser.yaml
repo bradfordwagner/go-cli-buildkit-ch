@@ -5,8 +5,8 @@ before:
 
 builds:
   - id: cli
-    main: ./cmd/testcli
-    binary: testcli
+    main: ./cmd/bkch
+    binary: bkch
     goos:
       - linux
       - windows
