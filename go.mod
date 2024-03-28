@@ -2,8 +2,6 @@ module bkch
 
 go 1.21
 
-replace github.com/bradfordwagner/go-util => /Users/bwagner/workspace/github/bradfordwagner/go.lib/bradfordwagner.go.lib.util
-
 require (
 	github.com/gorilla/mux v1.8.1
 	github.com/spf13/cobra v1.8.0
