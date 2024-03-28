@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/bradfordwagner/go-util/log"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -42,7 +43,37 @@ func (w *Watcher) Start() {
 	if err != nil {
 		panic(err.Error())
 	}
-	i, err2 := clientset.AppsV1().StatefulSets("buildkit").Watch(w.ctx, metav1.ListOptions{})
+
+	// watcher, err := clientset.AppsV1().StatefulSets("buildkit").Watch(w.ctx, metav1.ListOptions{
+	// 	LabelSelector: "app=buildkit",
+	// })
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+	// event := <-watcher.ResultChan()
+	// w.l.With("event", event).Info("event")
+	watcher, err := clientset.CoreV1().Pods("").Watch(context.TODO(), metav1.ListOptions{
+		LabelSelector: "app=buildkit",
+	})
+	if err != nil {
+		panic(err.Error())
+	}
+	for {
+		select {
+		case event := <-watcher.ResultChan():
+			po, ok := event.Object.(*v1.Pod)
+			if !ok {
+				break
+			}
+			ready := true
+			for i, _ := range po.Status.ContainerStatuses {
+				status := po.Status.ContainerStatuses[i]
+				ready = ready && status.Ready
+			}
+			w.l.With("pod", po.Name, "ready", ready).Info("ready")
+		}
+	}
+
 	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
