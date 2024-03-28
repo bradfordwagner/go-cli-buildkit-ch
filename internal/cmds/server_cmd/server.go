@@ -22,7 +22,7 @@ func Run(a args.ServerArgs) (err error) {
 	l.Info("initialized shutdown listener")
 
 	// watch kubernetes
-	go kube_watcher.NewWatcher(ctx, a).Start()
+	go kube_watcher.NewWatcher(ctx, cancel, a).Start()
 
 	// start http server on another routine
 	http_handler.Start(ctx, cancel, a)

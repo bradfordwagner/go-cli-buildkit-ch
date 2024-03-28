@@ -3,6 +3,8 @@ package main
 import (
 	"bkch/internal/args"
 	"bkch/internal/cmds/server_cmd"
+	"fmt"
+	"os"
 
 	"github.com/bradfordwagner/go-util/flag_helper"
 	"github.com/spf13/cobra"
@@ -11,6 +13,8 @@ import (
 func init() {
 	fs := serverCmd.Flags()
 	flag_helper.CreateFlag(fs, &serverArgs.Port, "port", "p", 8888, "env.PORT,default=8888: port to open http server on")
+	home, _ := os.UserHomeDir()
+	flag_helper.CreateFlag(fs, &serverArgs.Kubeconfig, "kubeconfig", "k", fmt.Sprintf("%s/.kube/config", home), "env.KUBECONFIG,default=home/.kube/config or sa token: run server locally, this is to help setup kubernetes access using sa token or kubeconfig")
 }
 
 var serverArgs args.ServerArgs

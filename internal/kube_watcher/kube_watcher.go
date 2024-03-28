@@ -3,8 +3,12 @@ package kube_watcher
 import (
 	"bkch/internal/args"
 	"context"
+	"fmt"
 
 	"github.com/bradfordwagner/go-util/log"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"go.uber.org/zap"
 )
@@ -16,7 +20,7 @@ type Watcher struct {
 }
 
 // NewWatcher creates a new Watcher
-func NewWatcher(ctx context.Context, a args.ServerArgs) *Watcher {
+func NewWatcher(ctx context.Context, cancel context.CancelFunc, a args.ServerArgs) *Watcher {
 	l := log.Log().With("module", "kube_watcher")
 	return &Watcher{
 		l:   l,
@@ -27,5 +31,19 @@ func NewWatcher(ctx context.Context, a args.ServerArgs) *Watcher {
 
 func (w *Watcher) Start() {
 	w.l.Info("starting")
+	config, err := clientcmd.BuildConfigFromFlags("", w.a.Kubeconfig)
+	if err != nil {
+		w.l.Errorw("failed to build kubeconfig", "error", err)
+		return
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 	// watch kubernetes
 }
