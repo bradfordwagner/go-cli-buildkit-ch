@@ -36,10 +36,13 @@ func (w *Watcher) Start() {
 		w.l.Errorw("failed to build kubeconfig", "error", err)
 		return
 	}
+	// this should fallback to in cluster eventually
+	// if not try: https://github.com/kubernetes/client-go/tree/master/examples/in-cluster-client-configuration
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
+	i, err2 := clientset.AppsV1().StatefulSets("buildkit").Watch(w.ctx, metav1.ListOptions{})
 	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
