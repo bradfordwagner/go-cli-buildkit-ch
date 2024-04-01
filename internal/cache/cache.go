@@ -38,12 +38,8 @@ func (c *Cache) GetPod(name string) (v *Pod) {
 	return v
 }
 
+// TODO: handle case where there are no available pods
 func (c *Cache) ConsistentHash(i string) string {
-	// calculate a constistent hash based on the string
-	// then map that back to c.pods
-	// format the returned string based on index + c.DnsFormat
-	// return the formatted string
-
 	// calculate the number of buckets based on available pods
 	var numAvailable int32
 	var bucketToIndex []int

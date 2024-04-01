@@ -30,7 +30,7 @@ func Run(a args.ServerArgs) (err error) {
 	kube_watcher.NewWatcher(ctx, cancel, a, c).Start()
 
 	// start http server on another routine
-	http_handler.Start(ctx, cancel, a)
+	http_handler.NewHandler(ctx, cancel, a, c).Start()
 
 	// wait for shutdown
 	<-ctx.Done()
