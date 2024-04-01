@@ -65,10 +65,16 @@ func (w *Watcher) Start() {
 			if !ok {
 				break
 			}
-			ready := true
+			ready := false
 			for i, _ := range po.Status.ContainerStatuses {
 				status := po.Status.ContainerStatuses[i]
-				ready = ready && status.Ready
+				if status.Ready &&
+					*status.Started &&
+					status.State.Running != nil &&
+					status.Name == "main" {
+					ready = true
+					break
+				}
 			}
 			w.l.With("pod", po.Name, "ready", ready).Info("ready")
 		}
