@@ -3,8 +3,9 @@ package cache
 // Cache is a struct that holds the cache data
 type Cache struct {
 	// name to metadata
-	Pods     map[string]*Pod
-	Replicas int
+	Pods      map[string]*Pod
+	Replicas  int
+	DnsFormat string
 }
 
 // Pod is a struct that holds the pod data

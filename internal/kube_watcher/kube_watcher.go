@@ -3,6 +3,7 @@ package kube_watcher
 import (
 	"bkch/internal/args"
 	"bkch/internal/cache"
+	"bkch/internal/constants"
 	"context"
 
 	bwutil "github.com/bradfordwagner/go-util"
@@ -137,6 +138,8 @@ func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
 					v.Replicas = replicas
 					w.l.With("replicas", replicas).Info("replicas updated")
 				}
+				dnsFormat := statefulset.Spec.Template.Annotations[constants.DnsFormatAnnotation]
+				v.DnsFormat = dnsFormat
 				return v, nil
 			})
 			// update pod cache
@@ -173,7 +176,6 @@ func (w *Watcher) updatePodCache(clientset *kubernetes.Clientset) (err error) {
 			}
 			v.Pods = cachePods
 		}
-
 		return v, nil
 	})
 	return
