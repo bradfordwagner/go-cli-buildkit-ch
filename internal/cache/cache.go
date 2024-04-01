@@ -1,5 +1,11 @@
 package cache
 
+import (
+	"fmt"
+
+	jump "github.com/lithammer/go-jump-consistent-hash"
+)
+
 // Cache is a struct that holds the cache data
 type Cache struct {
 	// name to metadata
@@ -11,6 +17,7 @@ type Cache struct {
 // Pod is a struct that holds the pod data
 type Pod struct {
 	IsAvailable bool
+	Index       int
 }
 
 // NewCache is a function that creates a new cache
@@ -29,4 +36,28 @@ func (c *Cache) GetPod(name string) (v *Pod) {
 		c.Pods[name] = v
 	}
 	return v
+}
+
+func (c *Cache) ConsistentHash(i string) string {
+	// calculate a constistent hash based on the string
+	// then map that back to c.pods
+	// format the returned string based on index + c.DnsFormat
+	// return the formatted string
+
+	// calculate the number of buckets based on available pods
+	var numAvailable int32
+	var bucketToIndex []int
+	for _, pod := range c.Pods {
+		if pod.IsAvailable {
+			numAvailable++
+			bucketToIndex = append(bucketToIndex, pod.Index)
+		}
+	}
+
+	// compute hash
+	h := jump.HashString(i, numAvailable, jump.NewCRC64())
+	// get index
+	index := bucketToIndex[h]
+	//format string
+	return fmt.Sprintf(c.DnsFormat, index)
 }

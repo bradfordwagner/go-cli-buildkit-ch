@@ -5,6 +5,8 @@ import (
 	"bkch/internal/cache"
 	"bkch/internal/constants"
 	"context"
+	"strconv"
+	"strings"
 
 	bwutil "github.com/bradfordwagner/go-util"
 	"github.com/bradfordwagner/go-util/log"
@@ -165,8 +167,16 @@ func (w *Watcher) updatePodCache(clientset *kubernetes.Clientset) (err error) {
 		for i, _ := range pods {
 			po := &pods[i]
 			isReady := isPodReady(po)
+
+			// compute index
+			// use pod name last value split by '-'
+			parts := strings.Split(po.Name, "-")
+			index, _ := strconv.Atoi(parts[len(parts)-1])
+
+			// update cache
 			cachePods[po.Name] = &cache.Pod{
 				IsAvailable: isReady,
+				Index:       index,
 			}
 
 			// check for changes
