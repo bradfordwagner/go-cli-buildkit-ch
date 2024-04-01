@@ -20,6 +20,7 @@ func NewCache() *Cache {
 	}
 }
 
+// GetPod is a function that returns a pod from the cache
 func (c *Cache) GetPod(name string) (v *Pod) {
 	var ok bool
 	if v, ok = c.Pods[name]; !ok {
