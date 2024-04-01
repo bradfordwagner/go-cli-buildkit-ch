@@ -16,6 +16,7 @@ func init() {
 	home, _ := os.UserHomeDir()
 	flag_helper.CreateFlag(fs, &serverArgs.Kubeconfig, "kubeconfig", "k", fmt.Sprintf("%s/.kube/config", home), "env.KUBECONFIG,default=home/.kube/config or sa token: run server locally, this is to help setup kubernetes access using sa token or kubeconfig")
 	flag_helper.CreateFlag(fs, &serverArgs.SelectorLabel, "selectorlabel", "s", "app=buildkit", "env.SELECTOR_LABEL,default='app=buildkit' selector to find statefulset+pods to watch for changes")
+	flag_helper.CreateFlag(fs, &serverArgs.KubernetesNamespace, "kubernetes_namespace", "n", "buildkit", "env.KUBERNETES_NAMESPACE,default='buildkit' namespace to watch for statefulset+pods")
 }
 
 var serverArgs args.ServerArgs

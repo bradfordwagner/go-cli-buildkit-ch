@@ -56,10 +56,11 @@ func (w *Watcher) Start() {
 		panic(err.Error())
 	}
 
-	// go w.watchPods(clientset)
+	w.updatePodCache(clientset)
+	go w.watchPods(clientset)
 	go w.watchStatefulset(clientset)
 
-	// watcher, err := clientset.AppsV1().StatefulSets("buildkit").Watch(w.ctx, metav1.ListOptions{
+	// watcher, err := clientset.AppsV1().StatefulSets(w.a.KubernetesNamespace).Watch(w.ctx, metav1.ListOptions{
 	// 	LabelSelector: "app=buildkit",
 	// })
 	// if err != nil {
@@ -93,27 +94,39 @@ func (w *Watcher) watchPods(clientset *kubernetes.Clientset) {
 			if !ok {
 				break
 			}
-			ready := false
-			for i, _ := range po.Status.ContainerStatuses {
-				status := po.Status.ContainerStatuses[i]
-				if status.Ready &&
-					*status.Started &&
-					status.State.Running != nil &&
-					status.Name == "main" {
-					ready = true
-					break
+
+			isReady := isPodReady(po)
+			w.c.SetF(func(v *cache.Cache) (*cache.Cache, error) {
+				podMeta, ok := v.Pods[po.Name]
+				if !ok || podMeta.IsAvailable != isReady {
+					w.l.With("pod", po.Name, "is_available", isReady).Info("pod availability changed")
 				}
-			}
-			w.l.With("pod", po.Name, "ready", ready).Info("ready")
+				cachedPod := v.GetPod(po.Name)
+				cachedPod.IsAvailable = isReady
+				return v, nil
+			})
 		}
 	}
 
 }
 
+func isPodReady(pod *v1.Pod) bool {
+	for i, _ := range pod.Status.ContainerStatuses {
+		status := pod.Status.ContainerStatuses[i]
+		if status.Ready &&
+			*status.Started &&
+			status.State.Running != nil &&
+			status.Name == "main" {
+			return true
+		}
+	}
+	return false
+}
+
 // watchStatefulset watches for statefulset changes
 func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
 	// watch for statefulset changes
-	watcher, err := clientset.AppsV1().StatefulSets("buildkit").Watch(w.ctx, metav1.ListOptions{
+	watcher, err := clientset.AppsV1().StatefulSets(w.a.KubernetesNamespace).Watch(w.ctx, metav1.ListOptions{
 		LabelSelector: w.a.SelectorLabel,
 	})
 
@@ -127,23 +140,57 @@ func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
 	for {
 		select {
 		case event := <-watcher.ResultChan():
-			w.l.With("event", event).Info("event")
+			// cast to StatefulSet
 			statefulset, ok := event.Object.(*appsv1.StatefulSet)
 			if !ok {
 				break
 			}
-			w.l.With("statefulset", statefulset).Info("statefulset")
+			// update replicas
 			_ = w.c.SetF(func(v *cache.Cache) (*cache.Cache, error) {
 				replicas := int(*statefulset.Spec.Replicas)
+				// let us know if replicas have changed
 				if replicas != v.Replicas {
 					v.Replicas = replicas
 					w.l.With("replicas", replicas).Info("replicas updated")
 				}
-
 				return v, nil
 			})
+			// update pod cache
+			_ = w.updatePodCache(clientset)
 		case <-w.ctx.Done():
 			return
 		}
 	}
+}
+
+func (w *Watcher) updatePodCache(clientset *kubernetes.Clientset) (err error) {
+	list, err := clientset.CoreV1().Pods(w.a.KubernetesNamespace).List(w.ctx, metav1.ListOptions{
+		LabelSelector: w.a.SelectorLabel,
+	})
+	if err != nil {
+		w.l.With("error", err).Error("failed to list pods")
+		return
+	}
+
+	pods := list.Items
+	_ = w.c.SetF(func(v *cache.Cache) (*cache.Cache, error) {
+		cachePods := make(map[string]*cache.Pod)
+		for i, _ := range pods {
+			po := &pods[i]
+			isReady := isPodReady(po)
+			cachePods[po.Name] = &cache.Pod{
+				IsAvailable: isReady,
+			}
+
+			// check for changes
+			orig, ok := v.Pods[po.Name]
+			if len(cachePods) == 0 || (ok && orig.IsAvailable != cachePods[po.Name].IsAvailable) {
+				w.l.With("pod", po.Name, "is_available", isReady).Info("pod availability changed")
+			}
+			v.Pods = cachePods
+		}
+
+		return v, nil
+	})
+	return
 }

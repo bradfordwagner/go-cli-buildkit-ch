@@ -3,7 +3,7 @@ package cache
 // Cache is a struct that holds the cache data
 type Cache struct {
 	// name to metadata
-	Pods     map[string]Pod
+	Pods     map[string]*Pod
 	Replicas int
 }
 
@@ -15,7 +15,16 @@ type Pod struct {
 // NewCache is a function that creates a new cache
 func NewCache() *Cache {
 	return &Cache{
-		Pods:     make(map[string]Pod),
+		Pods:     make(map[string]*Pod),
 		Replicas: -1,
 	}
+}
+
+func (c *Cache) GetPod(name string) (v *Pod) {
+	var ok bool
+	if v, ok = c.Pods[name]; !ok {
+		v = &Pod{}
+		c.Pods[name] = v
+	}
+	return v
 }
