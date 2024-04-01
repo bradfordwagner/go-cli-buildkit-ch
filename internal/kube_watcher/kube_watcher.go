@@ -49,8 +49,8 @@ func (w *Watcher) Start() {
 		w.l.Errorw("failed to build kubeconfig", "error", err)
 		return
 	}
-	// this should fallback to in cluster eventually
-	// if not try: https://github.com/kubernetes/client-go/tree/master/examples/in-cluster-client-configuration
+
+	// setup kubernetes client
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
@@ -59,22 +59,6 @@ func (w *Watcher) Start() {
 	w.updatePodCache(clientset)
 	go w.watchPods(clientset)
 	go w.watchStatefulset(clientset)
-
-	// watcher, err := clientset.AppsV1().StatefulSets(w.a.KubernetesNamespace).Watch(w.ctx, metav1.ListOptions{
-	// 	LabelSelector: "app=buildkit",
-	// })
-	// if err != nil {
-	// 	panic(err.Error())
-	// }
-	// event := <-watcher.ResultChan()
-	// w.l.With("event", event).Info("event")
-
-	// pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
-	// if err != nil {
-	// 	panic(err.Error())
-	// }
-	// fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
-	// watch kubernetes
 }
 
 // watchPods watches for pod changes
