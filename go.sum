@@ -1,5 +1,7 @@
 github.com/bradfordwagner/go-util v0.23.0 h1:/Zx5Rh2q0sU0V+Uh4cYo0G87Q9CghzxSRiFIgRgXDhE=
 github.com/bradfordwagner/go-util v0.23.0/go.mod h1:FzHKOmCsOrgNG9gc3W8NFus3Uo1Ye9D5V9lfzepxAdQ=
+github.com/bradfordwagner/go-util v0.24.0 h1:nekiYdTSLgsthqLaHObiPMsn+4uZVSkNyF1o4YVvW9s=
+github.com/bradfordwagner/go-util v0.24.0/go.mod h1:smTIGSNIY7MJTZ3BH6/Nc43tQgD+MNP1xbN4mzmb2D8=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

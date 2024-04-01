@@ -2,10 +2,12 @@ package server_cmd
 
 import (
 	"bkch/internal/args"
+	"bkch/internal/cache"
 	"bkch/internal/http_handler"
 	"bkch/internal/kube_watcher"
 	"context"
 
+	bwutil "github.com/bradfordwagner/go-util"
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/go-util/shutdown"
 )
@@ -21,8 +23,11 @@ func Run(a args.ServerArgs) (err error) {
 	})
 	l.Info("initialized shutdown listener")
 
+	// create cache
+	c := bwutil.NewLockableWithValue[*cache.Cache](cache.NewCache())
+
 	// watch kubernetes
-	go kube_watcher.NewWatcher(ctx, cancel, a).Start()
+	kube_watcher.NewWatcher(ctx, cancel, a, c).Start()
 
 	// start http server on another routine
 	http_handler.Start(ctx, cancel, a)

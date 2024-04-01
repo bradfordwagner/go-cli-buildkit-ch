@@ -2,11 +2,14 @@ package kube_watcher
 
 import (
 	"bkch/internal/args"
+	"bkch/internal/cache"
 	"context"
-	"fmt"
 
+	bwutil "github.com/bradfordwagner/go-util"
 	"github.com/bradfordwagner/go-util/log"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -15,18 +18,27 @@ import (
 )
 
 type Watcher struct {
-	a   args.ServerArgs
-	ctx context.Context
-	l   *zap.SugaredLogger
+	a      args.ServerArgs
+	c      *bwutil.Lockable[*cache.Cache]
+	ctx    context.Context
+	cancel context.CancelFunc
+	l      *zap.SugaredLogger
 }
 
 // NewWatcher creates a new Watcher
-func NewWatcher(ctx context.Context, cancel context.CancelFunc, a args.ServerArgs) *Watcher {
+func NewWatcher(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	a args.ServerArgs,
+	c *bwutil.Lockable[*cache.Cache],
+) *Watcher {
 	l := log.Log().With("module", "kube_watcher")
 	return &Watcher{
-		l:   l,
-		a:   a,
-		ctx: ctx,
+		a:      a,
+		c:      c,
+		cancel: cancel,
+		ctx:    ctx,
+		l:      l,
 	}
 }
 
@@ -44,6 +56,9 @@ func (w *Watcher) Start() {
 		panic(err.Error())
 	}
 
+	// go w.watchPods(clientset)
+	go w.watchStatefulset(clientset)
+
 	// watcher, err := clientset.AppsV1().StatefulSets("buildkit").Watch(w.ctx, metav1.ListOptions{
 	// 	LabelSelector: "app=buildkit",
 	// })
@@ -52,11 +67,24 @@ func (w *Watcher) Start() {
 	// }
 	// event := <-watcher.ResultChan()
 	// w.l.With("event", event).Info("event")
+
+	// pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+	// fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+	// watch kubernetes
+}
+
+// watchPods watches for pod changes
+func (w *Watcher) watchPods(clientset *kubernetes.Clientset) {
 	watcher, err := clientset.CoreV1().Pods("").Watch(context.TODO(), metav1.ListOptions{
-		LabelSelector: "app=buildkit",
+		LabelSelector: w.a.SelectorLabel,
 	})
 	if err != nil {
-		panic(err.Error())
+		w.l.With("error", err).Error("failed to watch pods")
+		w.cancel()
+		return
 	}
 	for {
 		select {
@@ -80,10 +108,42 @@ func (w *Watcher) Start() {
 		}
 	}
 
-	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+}
+
+// watchStatefulset watches for statefulset changes
+func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
+	// watch for statefulset changes
+	watcher, err := clientset.AppsV1().StatefulSets("buildkit").Watch(w.ctx, metav1.ListOptions{
+		LabelSelector: w.a.SelectorLabel,
+	})
+
+	// stop the server
 	if err != nil {
-		panic(err.Error())
+		w.l.With("error", err).Error("failed to watch statefulset")
+		w.cancel()
+		return
 	}
-	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
-	// watch kubernetes
+
+	for {
+		select {
+		case event := <-watcher.ResultChan():
+			w.l.With("event", event).Info("event")
+			statefulset, ok := event.Object.(*appsv1.StatefulSet)
+			if !ok {
+				break
+			}
+			w.l.With("statefulset", statefulset).Info("statefulset")
+			_ = w.c.SetF(func(v *cache.Cache) (*cache.Cache, error) {
+				replicas := int(*statefulset.Spec.Replicas)
+				if replicas != v.Replicas {
+					v.Replicas = replicas
+					w.l.With("replicas", replicas).Info("replicas updated")
+				}
+
+				return v, nil
+			})
+		case <-w.ctx.Done():
+			return
+		}
+	}
 }
