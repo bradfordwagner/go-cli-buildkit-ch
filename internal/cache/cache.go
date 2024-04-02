@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	bwutil "github.com/bradfordwagner/go-util"
 	jump "github.com/lithammer/go-jump-consistent-hash"
 )
 
@@ -49,17 +50,20 @@ const (
 	HashModeInCluster
 )
 
+func (m HashMode) String() string {
+	return [...]string{"api-gateway", "in-cluster"}[m]
+}
+
 // TODO: handle case where there are no available pods
 func (c *Cache) ConsistentHash(mode HashMode, i string, w http.ResponseWriter) (host string, err error) {
 	// calculate the number of buckets based on available pods
 	var numAvailable int32
-	var bucketToIndex []int
 	for _, pod := range c.Pods {
 		if pod.IsAvailable {
 			numAvailable++
-			bucketToIndex = append(bucketToIndex, pod.Index)
 		}
 	}
+	podBuckets := bwutil.ToSortedSliceByKey(c.Pods)
 
 	// if unavailable throw an error
 	if numAvailable == 0 {
@@ -79,7 +83,7 @@ func (c *Cache) ConsistentHash(mode HashMode, i string, w http.ResponseWriter) (
 
 	// compute hash
 	h := jump.HashString(i, numAvailable, jump.NewCRC64())
-	index := bucketToIndex[h]
+	index := podBuckets[h].Index
 	host = fmt.Sprintf(dnsFormat, index)
 	return
 }

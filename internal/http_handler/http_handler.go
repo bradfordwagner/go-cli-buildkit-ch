@@ -21,15 +21,19 @@ type Handler struct {
 	l      *zap.SugaredLogger
 }
 
-func (h *Handler) handler(w http.ResponseWriter, r *http.Request) {
-	l := log.Log()
+func (h *Handler) handler(mode cache.HashMode, w http.ResponseWriter, r *http.Request) {
+	hash := mux.Vars(r)["hash"]
+	l := log.Log().With("mode", mode, "hash", hash)
 	l.Debug("received request")
 
-	i := "hello"
-	res, err := h.c.Get().ConsistentHash(cache.HashModeAPIGateway, i, w)
-	l.With("input", i, "result", res, "error", err).Info("consistent hash result")
+	res, err := h.c.Get().ConsistentHash(cache.HashModeAPIGateway, hash, w)
+	l.With("result", res, "error", err).Info("consistent hash result")
 
 	fmt.Fprintf(w, res)
+}
+
+func (h *Handler) apiGateway(w http.ResponseWriter, r *http.Request) {
+	h.handler(cache.HashModeAPIGateway, w, r)
 }
 
 // NewHandler creates a new Handler
@@ -56,7 +60,8 @@ func NewHandler(
 // will invoke cancel if it fails to start
 func (h *Handler) Start() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", h.handler)
+	r.HandleFunc("/api-gateway/{hash}", h.apiGateway).Methods("GET")
+	// r.HandleFunc("/api-gateway", h.apiGateway).Methods("GET")
 	http.Handle("/", r)
 	address := fmt.Sprintf(":%d", h.a.Port)
 	server := &http.Server{Addr: address}
