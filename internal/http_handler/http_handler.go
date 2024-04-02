@@ -23,11 +23,11 @@ type Handler struct {
 
 func (h *Handler) handler(w http.ResponseWriter, r *http.Request) {
 	l := log.Log()
-	l.Info("received request")
+	l.Debug("received request")
 
-	hashMe := "hello"
-	res := h.c.Get().ConsistentHash(hashMe)
-	l.With("input", hashMe, "result", res).Info("consistent hash result")
+	i := "hello"
+	res, err := h.c.Get().ConsistentHash(cache.HashModeAPIGateway, i, w)
+	l.With("input", i, "result", res, "error", err).Info("consistent hash result")
 
 	fmt.Fprintf(w, res)
 }

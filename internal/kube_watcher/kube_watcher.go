@@ -140,8 +140,10 @@ func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
 					v.Replicas = replicas
 					w.l.With("replicas", replicas).Info("replicas updated")
 				}
-				dnsFormat := statefulset.Spec.Template.Annotations[constants.DnsFormatAnnotation]
-				v.DnsFormat = dnsFormat
+				// extract annotations for dns format to use in CH requests
+				apiGatewayFormat := statefulset.Spec.Template.Annotations[constants.DnsFormatAnnotationApiGateway.String()]
+				inClusterFormat := statefulset.Spec.Template.Annotations[constants.DnsFormatAnnotationInCluster.String()]
+				v.DnsFormatApiGateway, v.DnsFormatInCluster = apiGatewayFormat, inClusterFormat
 				return v, nil
 			})
 			// update pod cache

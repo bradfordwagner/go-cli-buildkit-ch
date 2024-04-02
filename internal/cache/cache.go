@@ -1,7 +1,9 @@
 package cache
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 
 	jump "github.com/lithammer/go-jump-consistent-hash"
 )
@@ -9,9 +11,10 @@ import (
 // Cache is a struct that holds the cache data
 type Cache struct {
 	// name to metadata
-	Pods      map[string]*Pod
-	Replicas  int
-	DnsFormat string
+	Pods                map[string]*Pod
+	Replicas            int
+	DnsFormatApiGateway string
+	DnsFormatInCluster  string
 }
 
 // Pod is a struct that holds the pod data
@@ -38,8 +41,16 @@ func (c *Cache) GetPod(name string) (v *Pod) {
 	return v
 }
 
+type HashMode int
+
+const (
+	// HashMode is the mode used for hashing
+	HashModeAPIGateway HashMode = iota
+	HashModeInCluster
+)
+
 // TODO: handle case where there are no available pods
-func (c *Cache) ConsistentHash(i string) string {
+func (c *Cache) ConsistentHash(mode HashMode, i string, w http.ResponseWriter) (host string, err error) {
 	// calculate the number of buckets based on available pods
 	var numAvailable int32
 	var bucketToIndex []int
@@ -50,10 +61,25 @@ func (c *Cache) ConsistentHash(i string) string {
 		}
 	}
 
+	// if unavailable throw an error
+	if numAvailable == 0 {
+		err = errors.New("no available pods")
+		http.Error(w, "no available pods", http.StatusServiceUnavailable)
+		return
+	}
+
+	// compute format string
+	var dnsFormat string
+	switch mode {
+	case HashModeAPIGateway:
+		dnsFormat = c.DnsFormatApiGateway
+	case HashModeInCluster:
+		dnsFormat = c.DnsFormatInCluster
+	}
+
 	// compute hash
 	h := jump.HashString(i, numAvailable, jump.NewCRC64())
-	// get index
 	index := bucketToIndex[h]
-	//format string
-	return fmt.Sprintf(c.DnsFormat, index)
+	host = fmt.Sprintf(dnsFormat, index)
+	return
 }
