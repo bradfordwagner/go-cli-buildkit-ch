@@ -26,7 +26,7 @@ func (h *Handler) handler(mode cache.HashMode, w http.ResponseWriter, r *http.Re
 	l := log.Log().With("mode", mode, "hash", hash)
 	l.Debug("received request")
 
-	res, err := h.c.Get().ConsistentHash(cache.HashModeAPIGateway, hash, w)
+	res, err := h.c.Get().ConsistentHash(mode, hash, w)
 	l.With("result", res, "error", err).Info("consistent hash result")
 
 	fmt.Fprintf(w, res)
@@ -34,6 +34,10 @@ func (h *Handler) handler(mode cache.HashMode, w http.ResponseWriter, r *http.Re
 
 func (h *Handler) apiGateway(w http.ResponseWriter, r *http.Request) {
 	h.handler(cache.HashModeAPIGateway, w, r)
+}
+
+func (h *Handler) inCluster(w http.ResponseWriter, r *http.Request) {
+	h.handler(cache.HashModeInCluster, w, r)
 }
 
 // NewHandler creates a new Handler
@@ -61,7 +65,7 @@ func NewHandler(
 func (h *Handler) Start() {
 	r := mux.NewRouter()
 	r.HandleFunc("/api-gateway/{hash}", h.apiGateway).Methods("GET")
-	// r.HandleFunc("/api-gateway", h.apiGateway).Methods("GET")
+	r.HandleFunc("/in-cluster/{hash}", h.inCluster).Methods("GET")
 	http.Handle("/", r)
 	address := fmt.Sprintf(":%d", h.a.Port)
 	server := &http.Server{Addr: address}

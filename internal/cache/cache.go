@@ -54,7 +54,7 @@ func (m HashMode) String() string {
 	return [...]string{"api-gateway", "in-cluster"}[m]
 }
 
-// TODO: handle case where there are no available pods
+// ConsistentHash is a function that returns a host based on the hash
 func (c *Cache) ConsistentHash(mode HashMode, i string, w http.ResponseWriter) (host string, err error) {
 	// calculate the number of buckets based on available pods
 	var numAvailable int32
