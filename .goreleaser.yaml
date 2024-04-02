@@ -6,6 +6,8 @@ before:
 builds:
   - id: cli
     main: ./cmd/testcli
+    env:
+      - CGO_ENABLED=0
     binary: testcli
     goos:
       - linux
