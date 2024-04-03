@@ -8,11 +8,11 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "testcli",
+	Use: "bkch",
 }
 
 func init() {
-	rootCmd.AddCommand(myVerb)
+	rootCmd.AddCommand(serverCmd)
 }
 
 func main() {

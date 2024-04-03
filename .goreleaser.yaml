@@ -5,8 +5,10 @@ before:
 
 builds:
   - id: cli
-    main: ./cmd/testcli
-    binary: testcli
+    main: ./cmd/bkch
+    env:
+      - CGO_ENABLED=0
+    binary: bkch
     goos:
       - linux
       - windows
