@@ -6,6 +6,8 @@ before:
 builds:
   - id: cli
     main: ./cmd/bkch
+    env:
+      - CGO_ENABLED=0
     binary: bkch
     goos:
       - linux
