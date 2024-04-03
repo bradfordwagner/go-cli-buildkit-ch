@@ -1,5 +1,6 @@
 # Buildkit ConsistentHash
-This component is part of the [Buildkit](https://github.com/bradfordwagner/chart-docker-buildkit) to add a service discovery component based on consistent hashing to tell the client which buildkit instance to send the request to.
+- This component is part of the [Buildkit](https://github.com/bradfordwagner/chart-docker-buildkit) to add a service discovery component based on consistent hashing to tell the client which buildkit instance to send the request to.
+- Downstream container can be found here at [bradfordwagner/container-bkch](https://github.com/bradfordwagner/container-bkch)
 
 ## Usage
 ```bash
