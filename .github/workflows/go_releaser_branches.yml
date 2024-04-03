@@ -4,6 +4,7 @@ on:
   - workflow_dispatch
 jobs:
   go-releaser-branches:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: checkout=self

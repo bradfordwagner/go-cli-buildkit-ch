@@ -5,6 +5,7 @@ on:
       - '*'
 jobs:
   go-releaser-tags:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: checkout=self
