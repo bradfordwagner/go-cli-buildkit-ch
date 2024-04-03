@@ -12,6 +12,7 @@ import (
 	"github.com/bradfordwagner/go-util/log"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -47,16 +48,12 @@ func NewWatcher(
 
 func (w *Watcher) Start() {
 	w.l.Info("starting")
-	config, err := clientcmd.BuildConfigFromFlags("", w.a.Kubeconfig)
-	if err != nil {
-		w.l.Errorw("failed to build kubeconfig", "error", err)
-		return
-	}
 
-	// setup kubernetes client
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := w.auth()
 	if err != nil {
-		panic(err.Error())
+		w.l.With("error", err).Error("failed to authenticate")
+		w.cancel()
+		return
 	}
 
 	w.updatePodCache(clientset)
@@ -64,9 +61,37 @@ func (w *Watcher) Start() {
 	go w.watchStatefulset(clientset)
 }
 
+func (w *Watcher) auth() (clientset *kubernetes.Clientset, err error) {
+	// in cluster
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		w.l.With("error", err).Warn("failed to create in cluster config - in cluster")
+	} else {
+		clientset, err = kubernetes.NewForConfig(config)
+		if err != nil {
+			w.l.With("error", err).Warn("failed to create kubernetes client, trying file based")
+		} else {
+			return
+		}
+	}
+
+	// kubeconfig / file based
+	config, err = clientcmd.BuildConfigFromFlags("", w.a.Kubeconfig)
+	if err != nil {
+		w.l.With("error", err).Error("failed to create in cluster config - file based")
+	}
+
+	clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		w.l.With("error", err).Error("failed to create kubernetes client")
+	}
+
+	return
+}
+
 // watchPods watches for pod changes
 func (w *Watcher) watchPods(clientset *kubernetes.Clientset) {
-	watcher, err := clientset.CoreV1().Pods("").Watch(context.TODO(), metav1.ListOptions{
+	watcher, err := clientset.CoreV1().Pods(w.a.KubernetesNamespace).Watch(context.TODO(), metav1.ListOptions{
 		LabelSelector: w.a.SelectorLabel,
 	})
 	if err != nil {
