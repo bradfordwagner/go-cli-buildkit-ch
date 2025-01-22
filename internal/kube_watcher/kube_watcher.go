@@ -5,6 +5,7 @@ import (
 	"bkch/internal/cache"
 	"bkch/internal/constants"
 	"context"
+	"k8s.io/apimachinery/pkg/watch"
 	"strconv"
 	"strings"
 
@@ -20,6 +21,8 @@ import (
 
 	"go.uber.org/zap"
 )
+
+var watchTimeoutSeconds = bwutil.Pointer(int64(86400)) // 1 day in seconds
 
 type Watcher struct {
 	a      args.ServerArgs
@@ -91,9 +94,7 @@ func (w *Watcher) auth() (clientset *kubernetes.Clientset, err error) {
 
 // watchPods watches for pod changes
 func (w *Watcher) watchPods(clientset *kubernetes.Clientset) {
-	watcher, err := clientset.CoreV1().Pods(w.a.KubernetesNamespace).Watch(context.TODO(), metav1.ListOptions{
-		LabelSelector: w.a.SelectorLabel,
-	})
+	watcher, err := w.createPodWatcher(clientset)
 	if err != nil {
 		w.l.With("error", err).Error("failed to watch pods")
 		w.cancel()
@@ -101,12 +102,20 @@ func (w *Watcher) watchPods(clientset *kubernetes.Clientset) {
 	}
 	for {
 		select {
-		case event := <-watcher.ResultChan():
-			po, ok := event.Object.(*v1.Pod)
-			if !ok {
-				break
+		case event, open := <-watcher.ResultChan():
+			// handle closed watch channel
+			if !open {
+				watcher, err = w.createPodWatcher(clientset)
+				if err != nil {
+					w.l.With("error", err).Error("failed to watch pods")
+					w.cancel()
+					return
+				}
+				// ensure we stop processing
+				continue
 			}
 
+			po := event.Object.(*v1.Pod)
 			isReady := isPodReady(po)
 			w.c.SetF(func(v *cache.Cache) (*cache.Cache, error) {
 				podMeta, ok := v.Pods[po.Name]
@@ -120,6 +129,14 @@ func (w *Watcher) watchPods(clientset *kubernetes.Clientset) {
 		}
 	}
 
+}
+
+func (w *Watcher) createPodWatcher(clientset *kubernetes.Clientset) (watch.Interface, error) {
+	watcher, err := clientset.CoreV1().Pods(w.a.KubernetesNamespace).Watch(context.TODO(), metav1.ListOptions{
+		LabelSelector:  w.a.SelectorLabel,
+		TimeoutSeconds: watchTimeoutSeconds,
+	})
+	return watcher, err
 }
 
 func isPodReady(pod *v1.Pod) bool {
@@ -138,11 +155,8 @@ func isPodReady(pod *v1.Pod) bool {
 // watchStatefulset watches for statefulset changes
 func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
 	// watch for statefulset changes
-	watcher, err := clientset.AppsV1().StatefulSets(w.a.KubernetesNamespace).Watch(w.ctx, metav1.ListOptions{
-		LabelSelector: w.a.SelectorLabel,
-	})
-
-	// stop the server
+	watcher, err := w.createStatefulsetWatcher(clientset)
+	// stop the server on error
 	if err != nil {
 		w.l.With("error", err).Error("failed to watch statefulset")
 		w.cancel()
@@ -151,12 +165,20 @@ func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
 
 	for {
 		select {
-		case event := <-watcher.ResultChan():
-			// cast to StatefulSet
-			statefulset, ok := event.Object.(*appsv1.StatefulSet)
-			if !ok {
-				break
+		case event, open := <-watcher.ResultChan():
+			if !open {
+				watcher, err = w.createStatefulsetWatcher(clientset)
+				if err != nil {
+					w.l.With("error", err).Error("failed to watch statefulset")
+					w.cancel()
+					return
+				}
+				// ensure we stop processing
+				continue
 			}
+
+			// cast to StatefulSet
+			statefulset := event.Object.(*appsv1.StatefulSet)
 			// update replicas
 			_ = w.c.SetF(func(v *cache.Cache) (*cache.Cache, error) {
 				replicas := int(*statefulset.Spec.Replicas)
@@ -177,6 +199,14 @@ func (w *Watcher) watchStatefulset(clientset *kubernetes.Clientset) {
 			return
 		}
 	}
+}
+
+func (w *Watcher) createStatefulsetWatcher(clientset *kubernetes.Clientset) (watch.Interface, error) {
+	watcher, err := clientset.AppsV1().StatefulSets(w.a.KubernetesNamespace).Watch(w.ctx, metav1.ListOptions{
+		LabelSelector:  w.a.SelectorLabel,
+		TimeoutSeconds: watchTimeoutSeconds,
+	})
+	return watcher, err
 }
 
 func (w *Watcher) updatePodCache(clientset *kubernetes.Clientset) (err error) {
