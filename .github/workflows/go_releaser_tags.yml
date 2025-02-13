@@ -10,15 +10,18 @@ jobs:
     steps:
       - name: checkout=self
         uses: actions/checkout@v4
-      - name: task=3.35.1
-        uses: pnorton5432/setup-task@v1
-        with:
-          task-version: 3.35.1
-      - name: checkout=taskfiles
+      - name: task=latest
+        run: |
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+          export PATH=$(pwd)/bin:$PATH
+      - name: task=version
+        run: ./bin/task --version
+      - name: checkout=taskfiles@main
         uses: actions/checkout@v4
         with:
           path: taskfiles
           repository: bradfordwagner/taskfiles
+          ref: main
       - name: go=1.21
         uses: actions/setup-go@v5
         with:
@@ -29,6 +32,6 @@ jobs:
           version: 1.24.0
           install-only: true
       - name: task=tags
-        run: task -t ./taskfiles/tasks/go_releaser.yml is_tag=true
+        run: git status && ./bin/task -t ./taskfiles/tasks/go_releaser.yml is_tag=true
         env:
           GITHUB_TOKEN: ${{ github.token }} 

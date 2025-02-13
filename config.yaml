@@ -1,0 +1,3 @@
+cnb:
+  repo: ghcr.io/bradfordwagner/bkch
+  builder: paketobuildpacks/builder-jammy-tiny
