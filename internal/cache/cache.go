@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	bwutil "github.com/bradfordwagner/go-util"
+	bwutil "github.com/bradfordwagner/go-util/bwutil"
 	jump "github.com/lithammer/go-jump-consistent-hash"
 )
 

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	bwutil "github.com/bradfordwagner/go-util"
+	"github.com/bradfordwagner/go-util/bwutil"
 	"github.com/bradfordwagner/go-util/log"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
