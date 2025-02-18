@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	bwutil "github.com/bradfordwagner/go-util"
+	"github.com/bradfordwagner/go-util/bwutil"
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
