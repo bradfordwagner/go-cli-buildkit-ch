@@ -24,7 +24,6 @@ func Run(maintenanceContext Context) (err error) {
 	failedPvcs := []string{}
 	for i := 0; i < numPvcs; i++ {
 		addr := fmt.Sprintf(maintenanceContext.Args.DnsFormatInCluster, i)
-		addr = addr + ":1234"
 
 		// this should recover rather than return
 		err := maintenanceContext.Prune.Prune(addr, maintenanceContext.Args.KeepDuration)

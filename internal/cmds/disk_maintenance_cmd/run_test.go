@@ -55,7 +55,7 @@ var _ = Describe("Run", func() {
 			Kubeconfig:          "",
 			KubernetesNamespace: "buildkit",
 			SelectorLabel:       "app=buildkit",
-			DnsFormatInCluster:  "buildkit-%d.buildkit.buildkit.svc.cluster.local",
+			DnsFormatInCluster:  "buildkit-%d.buildkit.buildkit.svc.cluster.local:1234",
 			KeepDuration:        time.Second * 30,
 		}
 		pvcFinder := mock_pvc_finder.NewMockInterface(ctrl)
