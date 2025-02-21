@@ -13,7 +13,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(
-		//serverCmd,
+		serverCmd,
 		diskMaintenanceCmd,
 	)
 }
