@@ -20,6 +20,7 @@ func init() {
 	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.KubernetesNamespace, "kubernetes_namespace", "n", "buildkit", "env.KUBERNETES_NAMESPACE,default='buildkit' namespace to watch for statefulset+pods")
 	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.DnsFormatInCluster, "dns_format_in_cluster", "d", "buildkit-%d.buildkit.buildkit.svc.cluster.local:1234", "env.DNS_FORMAT_IN_CLUSTER,default='buildkit-%d.buildkit.buildkit.svc.cluster.local:1234' format for dns in cluster")
 	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.KeepDuration, "keep_duration", "p", time.Hour*24, "env.KEEP_DURATION,default=24h duration to keep disk data")
+	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.PruneTimeout, "prune_timeout", "t", time.Second*30, "env.PRUNE_TIMEOUT,default=30s timeout for prune command")
 }
 
 var diskMaintenanceArgs args.DiskMaintenanceArgs

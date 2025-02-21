@@ -57,6 +57,7 @@ var _ = Describe("Run", func() {
 			SelectorLabel:       "app=buildkit",
 			DnsFormatInCluster:  "buildkit-%d.buildkit.buildkit.svc.cluster.local:1234",
 			KeepDuration:        time.Second * 30,
+			PruneTimeout:        time.Second * 30,
 		}
 		pvcFinder := mock_pvc_finder.NewMockInterface(ctrl)
 		prune := mock_buildkit_client.NewMockPruneInterface(ctrl)
@@ -71,7 +72,7 @@ var _ = Describe("Run", func() {
 
 			var failedPvcs []int
 			for i, p := range a.prune {
-				prune.EXPECT().Prune(p.addr, maintenanceArgs.KeepDuration).Return(p.err)
+				prune.EXPECT().Prune(p.addr, maintenanceArgs.KeepDuration, maintenanceArgs.PruneTimeout).Return(p.err)
 				if p.err != nil {
 					failedPvcs = append(failedPvcs, i)
 				}

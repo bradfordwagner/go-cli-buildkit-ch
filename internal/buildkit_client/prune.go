@@ -8,10 +8,8 @@ import (
 	"time"
 )
 
-const pruneTimeout = time.Second * 30
-
 type PruneInterface interface {
-	Prune(addr string, timeout time.Duration) error
+	Prune(addr string, keepDuration, requestTimeout time.Duration) error
 }
 
 type prune struct {
@@ -24,9 +22,9 @@ func NewPrune() PruneInterface {
 	return prune{}
 }
 
-func (p prune) Prune(addr string, timeout time.Duration) (err error) {
+func (p prune) Prune(addr string, keepDuration, requestTimeout time.Duration) (err error) {
 	l := log.Log().With("component", "prune", "addr", addr)
-	ctx, _ := context.WithTimeout(context.Background(), pruneTimeout)
+	ctx, _ := context.WithTimeout(context.Background(), requestTimeout)
 	buildkitClient, err := client.New(ctx, addr)
 	if err != nil {
 		l.With("err", err).Error("failed to create buildkit client")
@@ -53,7 +51,7 @@ func (p prune) Prune(addr string, timeout time.Duration) (err error) {
 	err = buildkitClient.Prune(
 		ctx,
 		usageInfo,
-		client.WithKeepOpt(timeout, 0, 0, 0),
+		client.WithKeepOpt(keepDuration, 0, 0, 0),
 	)
 	if err != nil {
 		l.With("err", err).Error("failed to prune")

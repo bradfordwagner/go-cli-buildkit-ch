@@ -26,7 +26,7 @@ func Run(maintenanceContext Context) (err error) {
 		addr := fmt.Sprintf(maintenanceContext.Args.DnsFormatInCluster, i)
 
 		// this should recover rather than return
-		err := maintenanceContext.Prune.Prune(addr, maintenanceContext.Args.KeepDuration)
+		err := maintenanceContext.Prune.Prune(addr, maintenanceContext.Args.KeepDuration, maintenanceContext.Args.PruneTimeout)
 		if err != nil {
 			pvcName := pvcs[i]
 			l.With("error", err, "pvc_name", pvcName).Warn("prune failed - will delete pvc")

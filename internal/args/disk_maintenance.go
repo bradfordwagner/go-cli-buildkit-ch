@@ -9,4 +9,5 @@ type DiskMaintenanceArgs struct {
 	SelectorLabel       string        `mapstructure:"SELECTOR_LABEL"`
 	DnsFormatInCluster  string        `mapstructure:"DNS_FORMAT_IN_CLUSTER"`
 	KeepDuration        time.Duration `mapstructure:"KEEP_DURATION"`
+	PruneTimeout        time.Duration `mapstructure:"PRUNE_TIMEOUT"`
 }
