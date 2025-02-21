@@ -18,7 +18,7 @@ func init() {
 	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.Kubeconfig, "kubeconfig", "k", fmt.Sprintf("%s/.kube/config", home), "env.KUBECONFIG,default=home/.kube/config or sa token: this is to help setup kubernetes access using sa token or kubeconfig")
 	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.SelectorLabel, "selectorlabel", "s", "app=buildkit", "env.SELECTOR_LABEL,default='app=buildkit' selector to find statefulset+pods to watch for changes")
 	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.KubernetesNamespace, "kubernetes_namespace", "n", "buildkit", "env.KUBERNETES_NAMESPACE,default='buildkit' namespace to watch for statefulset+pods")
-	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.DnsFormatInCluster, "dns_format_in_cluster", "d", "buildkit-%d.buildkit.buildkit.svc.cluster.local", "env.DNS_FORMAT_IN_CLUSTER,default='buildkit-%d.buildkit.buildkit.svc.cluster.local' format for dns in cluster")
+	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.DnsFormatInCluster, "dns_format_in_cluster", "d", "buildkit-%d.buildkit.buildkit.svc.cluster.local:1234", "env.DNS_FORMAT_IN_CLUSTER,default='buildkit-%d.buildkit.buildkit.svc.cluster.local:1234' format for dns in cluster")
 	flag_helper.CreateFlag(fs, &diskMaintenanceArgs.KeepDuration, "keep_duration", "p", time.Hour*24, "env.KEEP_DURATION,default=24h duration to keep disk data")
 }
 
