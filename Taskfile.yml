@@ -9,3 +9,15 @@ tasks:
       - goreleaser build --snapshot --clean
       - tree dist
     silent: true
+  watch_test:
+    cmds:
+      - watchexec -c -r -f "*.go" unbuffer task test
+  generate:
+    cmds:
+      - cmd: rm -rf gen/mocks
+        ignore_error: true
+      - go generate ./...
+  test:
+    cmds:
+      - go test ./...
+    silent: true

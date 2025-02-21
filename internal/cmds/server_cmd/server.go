@@ -7,7 +7,7 @@ import (
 	"bkch/internal/kube_watcher"
 	"context"
 
-	bwutil "github.com/bradfordwagner/go-util"
+	"github.com/bradfordwagner/go-util/bwutil"
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/go-util/shutdown"
 )
