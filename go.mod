@@ -9,7 +9,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gorilla/mux v1.8.1
 	github.com/lithammer/go-jump-consistent-hash v1.0.2
-	github.com/moby/buildkit v0.21.0
+	github.com/moby/buildkit v0.22.0
 	github.com/onsi/ginkgo/v2 v2.21.0
 	github.com/onsi/gomega v1.35.1
 	github.com/spf13/cobra v1.8.0
