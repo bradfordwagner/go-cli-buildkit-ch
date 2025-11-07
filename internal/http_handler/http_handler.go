@@ -29,7 +29,7 @@ func (h *Handler) handler(mode cache.HashMode, w http.ResponseWriter, r *http.Re
 	res, err := h.c.Get().ConsistentHash(mode, hash, w)
 	l.With("result", res, "error", err).Info("consistent hash result")
 
-	fmt.Fprintf(w, res)
+	fmt.Fprintf(w, "%s", res)
 }
 
 func (h *Handler) apiGateway(w http.ResponseWriter, r *http.Request) {
