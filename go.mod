@@ -1,6 +1,6 @@
 module bkch
 
-go 1.24.0
+go 1.26.4
 
 require (
 	github.com/bradfordwagner/go-kubeclient v0.2.0
