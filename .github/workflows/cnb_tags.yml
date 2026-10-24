@@ -38,10 +38,6 @@ jobs:
     needs: config-yaml
     steps:
       - uses: actions/checkout@v4
-      - name: dagger=0.15.2
-        run: |
-          curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.15.2 sh
-      
       # work around other runner's logging out removing credentials
       # https://github.com/docker/login-action/issues/173#issuecomment-1079688020
       - name: Set DOCKER_CONFIG
